@@ -18,3 +18,9 @@ const api = axios.create({
 export const authenticateUser = (email: string, password: string): Promise<AxiosResponse> => {
     return api.post(`/login`, { email, password });
 };
+
+// ✅ Fetch all events
+export const fetchEvents = async () => {
+  const response = await api.get("/events");
+  return response.data;
+};
