@@ -145,13 +145,7 @@ export default function EventsMap({ navigation }: any) {
       </MapView>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          {queryData
-            ? `${events.length} event(s) • Cached: ${new Date(
-                queryData.lastFetched
-              ).toLocaleTimeString()}`
-            : `${events.length} event(s) found`}
-        </Text>
+        <Text style={styles.footerText}>{events.length} event(s) found</Text>
         <RectButton
           style={[styles.smallButton, { backgroundColor: "#00A3FF" }]}
           onPress={handleNavigateToCreateEvent}
