@@ -16,7 +16,7 @@ import { RectButton } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthenticationContext } from "../context/AuthenticationContext";
 import { Event } from "../types/Events";
-import { fetchEvent } from "../services/api";
+import { fetchEvent, volunteerForEvent } from "../services/api";
 import { getFromNetworkFirst } from "../services/caching";
 
 // Types for navigation
@@ -80,23 +80,26 @@ export default function EventDetails({ route, navigation }: Props) {
     if (isUserVolunteered) return;
 
     try {
-      const updatedEvent = {
+      // Create updated event locally
+      const updatedEvent: Event = {
         ...event,
         volunteersIds: [...event.volunteersIds, currentUser.id],
       };
+      console.log("Updated Event:", updatedEvent);
+      // Call API with full updated event
+      const serverEvent = await volunteerForEvent(updatedEvent);
 
-      setEvent(updatedEvent);
-
-      // Update cache immediately
+      // Update local state and cache
+      setEvent(serverEvent);
       await AsyncStorage.setItem(
-        `@cached_event_${event.id}`,
-        JSON.stringify(updatedEvent)
+        `@cached_event_${serverEvent.id}`,
+        JSON.stringify(serverEvent)
       );
 
       Alert.alert("Success", "You have volunteered!");
     } catch (err) {
-      Alert.alert("Error", "Failed to update event status.");
       console.error(err);
+      Alert.alert("Error", "Failed to update event status.");
     }
   };
 

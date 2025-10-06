@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
+import { Event } from "../types/Events";
+
 const api = axios.create({
     // Before running your 'json-server', get your computer's IP address and
     // update your baseURL to `http://your_ip_address_here:3333` and then run:
@@ -33,7 +35,10 @@ export const fetchEvent = async (eventId: string) => {
 };
 
 // Volunteer for an event
-export const volunteerForEvent = async (eventId: string, userId: string) => {
-  const response = await api.put(`/events/${eventId}`,{ "volunteersIds": `${userId}`});
+export const volunteerForEvent = async (updatedEvent: Event) => {
+  const response = await api.put(`/events/${updatedEvent.id}`, {
+    ...updatedEvent, // includes all event fields
+    volunteersIds: updatedEvent.volunteersIds, // updated list
+  });
   return response.data;
 };

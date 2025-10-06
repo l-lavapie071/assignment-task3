@@ -1,8 +1,17 @@
 {
   "events": [
     {
-      "volunteersIds": "EF-BZ00",
-      "id": "e3c95682-870f-4080-a0d7-ae8e23e2534f"
+      "id": "e3c95682-870f-4080-a0d7-ae8e23e2534f",
+      "dateTime": "2022-01-11T21:30:00.000Z",
+      "description": "Past events should not be displayed in the map",
+      "name": "!!!Past Event!!!",
+      "organizerId": "gpFfX6e",
+      "position": {
+        "latitude": 51.105761,
+        "longitude": -114.106943
+      },
+      "volunteersNeeded": 1,
+      "volunteersIds": []
     },
     {
       "id": "98301b22-2b76-44f1-a8da-8c86c56b0367",
@@ -39,7 +48,8 @@
         "EF-BZ00",
         "gpFfX6e",
         "Hr-40KW",
-        "elKKrm3"
+        "elKKrm3",
+        "3UN3-2L"
       ]
     },
     {
@@ -56,7 +66,8 @@
       "volunteersNeeded": 20,
       "volunteersIds": [
         "EF-BZ00",
-        "Q5bVHgP"
+        "Q5bVHgP",
+        "3UN3-2L"
       ]
     }
   ],
