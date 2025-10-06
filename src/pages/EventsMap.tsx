@@ -17,54 +17,34 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import customMapStyle from "../../map-style.json";
 import * as MapSettings from "../constants/MapSettings";
 import mapMarkerImg from "../images/map-marker.png";
-import { fetchEvents } from "../services/api"; //
+import { fetchEvents } from "../services/api";
+import { getFromNetworkFirst } from "../services/caching";
 
 const EVENTS_STORAGE_KEY = "@cached_events";
-const QUERY_CACHE_KEY = "@cached_query";
 
 export default function EventsMap({ navigation }: any) {
   const auth = useContext(AuthenticationContext);
   const currentUser = auth?.value;
   const [events, setEvents] = useState<Event[]>([]);
-  const [queryData, setQueryData] = useState<any>(null);
   const mapViewRef = useRef<MapView>(null);
 
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        // Fetch Events
-        const eventsData = await fetchEvents();
+        const data = await getFromNetworkFirst<Event[]>(
+          EVENTS_STORAGE_KEY,
+          fetchEvents()
+        );
 
-        const upcoming = eventsData.filter(
+        // filter out past events
+        const upcoming = data.filter(
           (event: Event) => new Date(event.dateTime) > new Date()
         );
-        const finalEvents = upcoming.length ? upcoming : eventsData;
+        const finalEvents = upcoming.length ? upcoming : data;
         setEvents(finalEvents);
-
-        //Cache data
-        await AsyncStorage.setItem(
-          EVENTS_STORAGE_KEY,
-          JSON.stringify(finalEvents)
-        );
-        const queryInfo = {
-          lastFetched: new Date().toISOString(),
-          total: finalEvents.length,
-          source: "network",
-        };
-        await AsyncStorage.setItem(QUERY_CACHE_KEY, JSON.stringify(queryInfo));
-        setQueryData(queryInfo);
       } catch (error) {
-        console.log("Network error, loading cached events:", error);
-
-        const cachedEvents = await AsyncStorage.getItem(EVENTS_STORAGE_KEY);
-        const cachedQuery = await AsyncStorage.getItem(QUERY_CACHE_KEY);
-
-        if (cachedEvents) setEvents(JSON.parse(cachedEvents));
-        if (cachedQuery) setQueryData(JSON.parse(cachedQuery));
-
-        if (!cachedEvents) {
-          Alert.alert("Error", "No network and no cached data available.");
-        }
+        console.error("Failed to load events:", error);
+        Alert.alert("Error", "Could not load events from network or cache.");
       }
     };
 
@@ -72,12 +52,10 @@ export default function EventsMap({ navigation }: any) {
   }, []);
 
   const handleNavigateToCreateEvent = () => {
-    //navigation.navigate("CreateEvent");
     alert("Create Event: ");
   };
 
   const handleNavigateToEventDetails = (eventId: string) => {
-    //alert("eventId: " + eventId);
     navigation.navigate("EventDetails", { eventId });
   };
 

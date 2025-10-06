@@ -14,14 +14,15 @@ import { StackScreenProps } from "@react-navigation/stack";
 import { Feather } from "@expo/vector-icons";
 import { RectButton } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import eventsRaw from "../../db.json";
 import { AuthenticationContext } from "../context/AuthenticationContext";
-import { Event } from "../types/Event";
+import { Event } from "../types/Events";
+import { fetchEvent } from "../services/api";
+import { getFromNetworkFirst } from "../services/caching";
 
+// Types for navigation
 type RootStackParamList = {
   EventDetails: { eventId: string };
 };
-
 type Props = StackScreenProps<RootStackParamList, "EventDetails">;
 
 export default function EventDetails({ route, navigation }: Props) {
@@ -29,25 +30,28 @@ export default function EventDetails({ route, navigation }: Props) {
   const auth = useContext(AuthenticationContext);
   const currentUser = auth?.value;
 
-  const eventsData = eventsRaw as { events: Event[] };
-  const eventOriginal = eventsData.events.find((e) => e.id === eventId);
-
   const [event, setEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     const loadEvent = async () => {
-      if (!eventOriginal) return;
+      const cacheKey = `@cached_event_${eventId}`;
 
-      const saved = await AsyncStorage.getItem(`event-${eventOriginal.id}`);
-      if (saved) {
-        setEvent(JSON.parse(saved));
+      const data = await getFromNetworkFirst<Event>(
+        cacheKey,
+        fetchEvent(eventId)
+      );
+
+      if (data) {
+        setEvent(data);
       } else {
-        setEvent(eventOriginal);
+        Alert.alert("Error", "Could not load event from network or cache.");
       }
     };
 
-    loadEvent();
-  }, [eventOriginal]);
+    if (eventId) {
+      loadEvent();
+    }
+  }, [eventId]);
 
   if (!event) {
     return (
@@ -57,36 +61,43 @@ export default function EventDetails({ route, navigation }: Props) {
     );
   }
 
+  // Derived state logic
   const isUserVolunteered = currentUser
     ? event.volunteersIds.includes(currentUser.id)
     : false;
   const isFull = event.volunteersIds.length >= event.volunteersNeeded;
 
-  let statusText = "";
-  if (isUserVolunteered) {
-    statusText = "Volunteered";
-  } else if (isFull) {
-    statusText = "Team is full";
-  } else {
-    statusText = `${event.volunteersIds.length} / ${event.volunteersNeeded} volunteers`;
-  }
+  const statusText = isUserVolunteered
+    ? "Volunteered"
+    : isFull
+    ? "Team is full"
+    : `${event.volunteersIds.length} / ${event.volunteersNeeded} volunteers`;
 
+  // Handle volunteering
   const handleVolunteer = async () => {
     if (!currentUser) return Alert.alert("Error", "No user logged in");
     if (isFull) return Alert.alert("Team is full");
     if (isUserVolunteered) return;
 
-    const updatedEvent = {
-      ...event,
-      volunteersIds: [...event.volunteersIds, currentUser.id],
-    };
+    try {
+      const updatedEvent = {
+        ...event,
+        volunteersIds: [...event.volunteersIds, currentUser.id],
+      };
 
-    setEvent(updatedEvent);
-    await AsyncStorage.setItem(
-      `event-${event.id}`,
-      JSON.stringify(updatedEvent)
-    );
-    Alert.alert("Success", "You have volunteered!");
+      setEvent(updatedEvent);
+
+      // Update cache immediately
+      await AsyncStorage.setItem(
+        `@cached_event_${event.id}`,
+        JSON.stringify(updatedEvent)
+      );
+
+      Alert.alert("Success", "You have volunteered!");
+    } catch (err) {
+      Alert.alert("Error", "Failed to update event status.");
+      console.error(err);
+    }
   };
 
   const handleCall = () => {
@@ -123,16 +134,6 @@ export default function EventDetails({ route, navigation }: Props) {
         paddingTop: StatusBar.currentHeight || 50,
       }}
     >
-      {/* --- BACK BUTTON */}
-      {/*
-      <RectButton
-        style={[styles.backButton, styles.smallButton, { backgroundColor: "#4D6F80" }]}
-        onPress={() => navigation.goBack()}
-      >
-        <Feather name="arrow-left" size={20} color="#FFF" />
-      </RectButton>
-      */}
-
       <Image source={{ uri: event.imageUrl }} style={styles.image} />
 
       <Text style={styles.title}>{event.name}</Text>
@@ -163,11 +164,9 @@ export default function EventDetails({ route, navigation }: Props) {
           </>
         )}
 
-        {(!isFull || isUserVolunteered) && (
-          <RectButton style={styles.iconButton} onPress={handleShare}>
-            <Feather name="share-2" size={20} color="white" />
-          </RectButton>
-        )}
+        <RectButton style={styles.iconButton} onPress={handleShare}>
+          <Feather name="share-2" size={20} color="white" />
+        </RectButton>
 
         <RectButton style={styles.iconButton} onPress={handleShowRoute}>
           <Feather name="map-pin" size={20} color="white" />
@@ -181,20 +180,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   error: { fontSize: 18, color: "red" },
-  backButton: {
-    position: "absolute",
-    top: 70,
-    left: 24,
-    elevation: 3,
-    zIndex: 10,
-  },
-  smallButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   image: { width: "100%", height: 220, borderRadius: 12, marginBottom: 16 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 4 },
   date: { fontSize: 14, color: "#666", marginBottom: 12 },

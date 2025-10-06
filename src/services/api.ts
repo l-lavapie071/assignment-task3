@@ -12,15 +12,28 @@ const api = axios.create({
     // To use `my-json-server`, make sure your `db.json` is located at the repo root.
 
     /* baseURL: 'https://my-json-server.typicode.com/l-lavapie071/assignment-task2', */
-    baseURL: 'http://172.16.35.4:3333',
+    //baseURL: 'http://172.16.35.4:3333',
+    baseURL: 'http://172.16.29.201:3333',
 });
 
 export const authenticateUser = (email: string, password: string): Promise<AxiosResponse> => {
     return api.post(`/login`, { email, password });
 };
 
-// ✅ Fetch all events
+// Fetch all events
 export const fetchEvents = async () => {
   const response = await api.get("/events");
+  return response.data;
+};
+
+// Fetch event by ID
+export const fetchEvent = async (eventId: string) => {
+  const response = await api.get(`/events/${eventId}`);
+  return response.data;
+};
+
+// Volunteer for an event
+export const volunteerForEvent = async (eventId: string, userId: string) => {
+  const response = await api.put(`/events/${eventId}`,{ "volunteersIds": `${userId}`});
   return response.data;
 };
