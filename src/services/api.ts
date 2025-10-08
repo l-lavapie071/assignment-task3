@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 import { Event } from "../types/Events";
+import { v4 as uuidv4 } from "uuid"; // 
 
 const api = axios.create({
     // Before running your 'json-server', get your computer's IP address and
@@ -14,7 +15,7 @@ const api = axios.create({
     // To use `my-json-server`, make sure your `db.json` is located at the repo root.
 
     /* baseURL: 'https://my-json-server.typicode.com/l-lavapie071/assignment-task2', */
-    //baseURL: 'http://172.16.35.4:3333',
+    //baseURL: 'http://172.16.35.4:3333',1
     baseURL: 'http://172.16.29.201:3333',
 });
 
@@ -40,5 +41,11 @@ export const volunteerForEvent = async (updatedEvent: Event) => {
     ...updatedEvent, // includes all event fields
     volunteersIds: updatedEvent.volunteersIds, // updated list
   });
+  return response.data;
+};
+
+// Create new event
+export const createEvent = async (newEvent: Event) => {
+  const response = await api.post(`/events`, newEvent);
   return response.data;
 };

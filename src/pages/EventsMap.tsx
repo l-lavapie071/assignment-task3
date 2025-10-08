@@ -19,6 +19,7 @@ import * as MapSettings from "../constants/MapSettings";
 import mapMarkerImg from "../images/map-marker.png";
 import { fetchEvents } from "../services/api";
 import { getFromNetworkFirst } from "../services/caching";
+import { useFocusEffect } from "@react-navigation/native";
 
 const EVENTS_STORAGE_KEY = "@cached_events";
 
@@ -26,39 +27,46 @@ export default function EventsMap({ navigation }: any) {
   const auth = useContext(AuthenticationContext);
   const currentUser = auth?.value;
   const [events, setEvents] = useState<Event[]>([]);
+  const [mapCenter, setMapCenter] = useState({
+    latitude: MapSettings.DEFAULT_REGION.latitude,
+    longitude: MapSettings.DEFAULT_REGION.longitude,
+  });
   const mapViewRef = useRef<MapView>(null);
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const data = await getFromNetworkFirst<Event[]>(
-          EVENTS_STORAGE_KEY,
-          fetchEvents()
-        );
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadEvents = async () => {
+        try {
+          const data = await getFromNetworkFirst<Event[]>(
+            EVENTS_STORAGE_KEY,
+            fetchEvents()
+          );
 
-        // filter out past events
-        const upcoming = data.filter(
-          (event: Event) => new Date(event.dateTime) > new Date()
-        );
-        const finalEvents = upcoming.length ? upcoming : data;
-        setEvents(finalEvents);
-      } catch (error) {
-        console.error("Failed to load events:", error);
-        Alert.alert("Error", "Could not load events from network or cache.");
-      }
-    };
+          const upcoming = data.filter(
+            (event: Event) => new Date(event.dateTime) > new Date()
+          );
+          const finalEvents = upcoming.length ? upcoming : data;
+          setEvents(finalEvents);
+        } catch (error) {
+          console.error("Failed to load events:", error);
+          Alert.alert("Error", "Could not load events from network or cache.");
+        }
+      };
+      loadEvents();
+    }, [])
+  );
 
-    loadEvents();
-  }, []);
-
+  // Navigate to CreateEvent with center coordinates
   const handleNavigateToCreateEvent = () => {
-    alert("Create Event: ");
+    navigation.navigate("CreateEvent", { position: mapCenter });
   };
 
+  // Navigate to Event Details
   const handleNavigateToEventDetails = (eventId: string) => {
     navigation.navigate("EventDetails", { eventId });
   };
 
+  // Logout
   const handleLogout = async () => {
     await AsyncStorage.multiRemove(["userInfo", "accessToken"]);
     auth?.setValue(undefined);
@@ -98,6 +106,12 @@ export default function EventsMap({ navigation }: any) {
         toolbarEnabled={false}
         moveOnMarkerPress={false}
         mapPadding={MapSettings.EDGE_PADDING}
+        onRegionChangeComplete={(region) =>
+          setMapCenter({
+            latitude: region.latitude,
+            longitude: region.longitude,
+          })
+        }
         onLayout={() => {
           if (events.length) {
             mapViewRef.current?.fitToCoordinates(
@@ -121,6 +135,9 @@ export default function EventsMap({ navigation }: any) {
           </Marker>
         ))}
       </MapView>
+
+      {/* Fixed blue circle pointer in the center */}
+      <View pointerEvents="none" style={styles.centerPointer} />
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>{events.length} event(s) found</Text>
@@ -175,5 +192,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+  },
+  centerPointer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    width: 20,
+    height: 20,
+    marginLeft: -10,
+    marginTop: -10,
+    borderRadius: 10,
+    backgroundColor: "blue",
+    borderWidth: 2,
+    borderColor: "white",
+    zIndex: 10,
   },
 });

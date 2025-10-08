@@ -8,6 +8,8 @@ const { Navigator, Screen } = createStackNavigator();
 import Login from "../pages/Login";
 import EventsMap from "../pages/EventsMap";
 import EventDetails from "../pages/EventDetails";
+import CreateEvent from "../pages/CreateEvent";
+
 import {
   AuthenticationContext,
   AuthenticationContextObject,
@@ -34,6 +36,9 @@ export default function Routes() {
           <Screen name="Login" component={Login} />
 
           <Screen name="EventsMap" component={EventsMap} />
+
+          <Screen name="CreateEvent" component={CreateEvent} />
+
           <Screen name="EventDetails" component={EventDetails} />
         </Navigator>
       </NavigationContainer>
