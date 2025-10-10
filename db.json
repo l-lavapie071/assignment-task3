@@ -69,64 +69,6 @@
         "Q5bVHgP",
         "3UN3-2L"
       ]
-    },
-    {
-      "id": "83d9dcff-e167-445a-bcd8-11afc1fe9bcd",
-      "name": "Sample Event",
-      "description": "This is my sample event created",
-      "dateTime": "2025:12:25 12:00",
-      "imageUrl": "https://i1.wp.com/www.slashfilm.com/wp/wp-content/images/Minions-movie-2.jpg",
-      "organizerId": "3UN3-2L",
-      "position": {
-        "latitude": 51.03,
-        "longitude": -114.093
-      },
-      "volunteersNeeded": 12,
-      "volunteersIds": []
-    },
-    {
-      "id": "0b7cf605-bb8a-4344-9aba-de3f9ce8b7ed",
-      "name": "Yea",
-      "description": "Yea",
-      "dateTime": "2025-11-06T15:30:00.000Z",
-      "imageUrl": "https://i1.wp.com/www.slashfilm.com/wp/wp-content/images/Minions-movie-2.jpg",
-      "organizerId": "3UN3-2L",
-      "position": {
-        "latitude": 51.055224173197665,
-        "longitude": -114.07011151313782
-      },
-      "volunteersNeeded": 33,
-      "volunteersIds": []
-    },
-    {
-      "id": "6bf939c3-ae4e-4bf0-a800-80041625fc63",
-      "name": "Graduation",
-      "description": "Graduation",
-      "dateTime": "2025-11-06T15:30:00.000Z",
-      "imageUrl": "https://i1.wp.com/www.slashfilm.com/wp/wp-content/images/Minions-movie-2.jpg",
-      "organizerId": "3UN3-2L",
-      "position": {
-        "latitude": 51.07818985097792,
-        "longitude": -114.13459500297904
-      },
-      "volunteersNeeded": 245,
-      "volunteersIds": [
-        "3UN3-2L"
-      ]
-    },
-    {
-      "id": "f94061c6-a38e-46f2-8e14-bcb0752d4b9a",
-      "name": "New Event",
-      "description": "New Event",
-      "dateTime": "2026-01-01T19:00:00.000Z",
-      "imageUrl": "https://i1.wp.com/www.slashfilm.com/wp/wp-content/images/Minions-movie-2.jpg",
-      "organizerId": "3UN3-2L",
-      "position": {
-        "latitude": 51.03,
-        "longitude": -114.093
-      },
-      "volunteersNeeded": 12,
-      "volunteersIds": []
     }
   ],
   "users": [
