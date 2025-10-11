@@ -50,11 +50,8 @@ export default function CreateEvent({ route, navigation }: any) {
     }
   };
 
-  // Choose or Take a Photo
-
   const pickImage = async (fromCamera: boolean = false) => {
     try {
-      // Request permissions
       const permissionResult = fromCamera
         ? await ImagePicker.requestCameraPermissionsAsync()
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -87,14 +84,10 @@ export default function CreateEvent({ route, navigation }: any) {
     }
   };
 
-  // Upload Image to FreeImage.host
   const uploadImage = async (picked: any) => {
     try {
       setUploading(true);
-
       const fileUri = picked.uri;
-
-      // Convert image to base64
       const base64 = await FileSystem.readAsStringAsync(fileUri, {
         encoding: "base64",
       });
@@ -114,7 +107,6 @@ export default function CreateEvent({ route, navigation }: any) {
 
       const data = await response.json();
       if (data?.image?.url) {
-        // Get file info safely
         const fileInfo = await FileSystem.getInfoAsync(fileUri);
         const sizeKB = fileInfo.exists ? (fileInfo.size ?? 0) / 1024 : 0;
 
@@ -127,21 +119,48 @@ export default function CreateEvent({ route, navigation }: any) {
 
         Alert.alert("Upload Successful", "Image uploaded successfully!");
       } else {
-        console.error("Upload failed:", data);
         Alert.alert("Error", "Failed to upload image. Try again.");
       }
     } catch (err) {
-      console.error("Upload error:", err);
       Alert.alert("Error", "Image upload failed.");
     } finally {
       setUploading(false);
     }
   };
 
-  // Create Event
   const handleCreateEvent = async () => {
-    if (!name || !description || !volunteersNeeded) {
-      Alert.alert("Validation Error", "Please fill in all fields.");
+    if (!name.trim()) {
+      Alert.alert("Validation Error", "Event name is required.");
+      return;
+    }
+    if (!description.trim()) {
+      Alert.alert("Validation Error", "Event description is required.");
+      return;
+    }
+    if (!volunteersNeeded.trim()) {
+      Alert.alert(
+        "Validation Error",
+        "Please specify how many volunteers are needed."
+      );
+      return;
+    }
+
+    const numVolunteers = Number(volunteersNeeded);
+    if (isNaN(numVolunteers) || numVolunteers <= 0) {
+      Alert.alert(
+        "Validation Error",
+        "Volunteers Needed must be a positive number."
+      );
+      return;
+    }
+
+    if (!date || isNaN(date.getTime())) {
+      Alert.alert("Validation Error", "Please select a valid date and time.");
+      return;
+    }
+
+    if (!image) {
+      Alert.alert("Validation Error", "Please upload an event photo.");
       return;
     }
 
@@ -150,15 +169,13 @@ export default function CreateEvent({ route, navigation }: any) {
     try {
       const newEvent = {
         id: uuid.v4().toString(),
-        name,
-        description,
+        name: name.trim(),
+        description: description.trim(),
         dateTime: dateTimeISO,
-        imageUrl:
-          image?.url ||
-          "https://i1.wp.com/www.slashfilm.com/wp/wp-content/images/Minions-movie-2.jpg",
+        imageUrl: image?.url,
         organizerId: currentUser?.id,
         position,
-        volunteersNeeded: Number(volunteersNeeded),
+        volunteersNeeded: numVolunteers,
         volunteersIds: [],
       };
 
@@ -166,7 +183,6 @@ export default function CreateEvent({ route, navigation }: any) {
       Alert.alert("Success", "Event created successfully!");
       navigation.navigate("EventsMap");
     } catch (error) {
-      console.error("Failed to create event:", error);
       Alert.alert("Error", "Failed to create event. Please try again.");
     }
   };
@@ -179,8 +195,33 @@ export default function CreateEvent({ route, navigation }: any) {
         paddingTop: StatusBar.currentHeight || 50,
       }}
     >
-      <Text style={styles.heading}>Create New Event</Text>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <RectButton
+          style={styles.headerButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Feather name="arrow-left" size={18} color="#00A3FF" />
+          <Text style={styles.headerButtonText}>Back</Text>
+        </RectButton>
 
+        <Text style={styles.heading}>Create New Event</Text>
+
+        <RectButton
+          style={styles.headerButton}
+          onPress={() => navigation.navigate("EventsMap")}
+        >
+          <Feather name="x" size={18} color="#FF3B30" />
+          <Text style={[styles.headerButtonText, { color: "#FF3B30" }]}>
+            Cancel
+          </Text>
+        </RectButton>
+      </View>
+
+      {/* Divider Line */}
+      <View style={styles.divider} />
+
+      {/* Form Fields */}
       <Text style={styles.label}>Event Name</Text>
       <TextInput
         style={styles.input}
@@ -277,15 +318,14 @@ export default function CreateEvent({ route, navigation }: any) {
       {image && (
         <View style={styles.imagePreview}>
           <Image source={{ uri: image.uri }} style={styles.imageThumb} />
-          <View>
-            <Text>{image.name}</Text>
-            <Text>{image.size}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.imageText}>{image.name}</Text>
+            <Text style={styles.imageText}>{image.size}</Text>
           </View>
         </View>
       )}
 
       <RectButton style={styles.createButton} onPress={handleCreateEvent}>
-        {/* <Feather name="check" size={20} color="#FFF" /> */}
         <Text style={styles.createButtonText}>Save</Text>
       </RectButton>
     </ScrollView>
@@ -294,7 +334,39 @@ export default function CreateEvent({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  heading: { fontSize: 24, fontWeight: "700", marginBottom: 20 },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  headerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+
+  headerButtonText: {
+    marginLeft: 4,
+    fontWeight: "600",
+    color: "#00A3FF",
+  },
+
+  heading: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    flex: 1,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginBottom: 16,
+  },
+
   label: { fontSize: 16, fontWeight: "600", marginBottom: 6 },
   input: {
     backgroundColor: "#f2f2f2",
@@ -303,20 +375,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   createButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#00A3FF",
     padding: 14,
     borderRadius: 12,
     marginTop: 20,
+    alignItems: "center",
   },
-  createButtonText: { color: "#fff", fontWeight: "600", marginLeft: 8 },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
+  createButtonText: { color: "#fff", fontWeight: "600" },
+  row: { flexDirection: "row", marginBottom: 16 },
   dateButton: {
     backgroundColor: "#f2f2f2",
     padding: 12,
@@ -333,23 +399,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flex: 1,
   },
-  uploadButtonText: {
-    color: "#FFF",
-    fontWeight: "600",
-    marginLeft: 6,
-  },
+  uploadButtonText: { color: "#FFF", fontWeight: "600", marginLeft: 6 },
   imagePreview: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f2f2f2",
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 10,
     marginBottom: 16,
+    height: 160,
   },
   imageThumb: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 10,
+    width: 130,
+    height: "100%",
+    borderRadius: 10,
+    marginRight: 12,
+    resizeMode: "contain",
+  },
+  imageText: {
+    flexShrink: 1,
+    textAlign: "justify",
   },
 });
