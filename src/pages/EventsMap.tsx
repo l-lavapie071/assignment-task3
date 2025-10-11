@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,6 +17,8 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import customMapStyle from "../../map-style.json";
 import * as MapSettings from "../constants/MapSettings";
 import mapMarkerImg from "../images/map-marker.png";
+import mapMarkerGreyImg from "../images/map-marker-grey.png";
+import mapMarkerBlueImg from "../images/map-marker-blue.png"; // <-- new blue marker
 import { fetchEvents } from "../services/api";
 import { getFromNetworkFirst } from "../services/caching";
 import { useFocusEffect } from "@react-navigation/native";
@@ -56,17 +58,14 @@ export default function EventsMap({ navigation }: any) {
     }, [])
   );
 
-  // Navigate to CreateEvent with center coordinates
   const handleNavigateToCreateEvent = () => {
     navigation.navigate("CreateEvent", { position: mapCenter });
   };
 
-  // Navigate to Event Details
   const handleNavigateToEventDetails = (eventId: string) => {
     navigation.navigate("EventDetails", { eventId });
   };
 
-  // Logout
   const handleLogout = async () => {
     await AsyncStorage.multiRemove(["userInfo", "accessToken"]);
     auth?.setValue(undefined);
@@ -121,19 +120,29 @@ export default function EventsMap({ navigation }: any) {
           }
         }}
       >
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            coordinate={event.position}
-            onPress={() => handleNavigateToEventDetails(event.id)}
-          >
-            <Image
-              resizeMode="contain"
-              style={{ width: 48, height: 54 }}
-              source={mapMarkerImg}
-            />
-          </Marker>
-        ))}
+        {events.map((event) => {
+          const isFull = event.volunteersIds.length >= event.volunteersNeeded;
+          const isVolunteered =
+            currentUser && event.volunteersIds.includes(currentUser.id);
+
+          let markerSource = mapMarkerImg; // default
+          if (isFull) markerSource = mapMarkerGreyImg;
+          if (isVolunteered) markerSource = mapMarkerBlueImg; // override if volunteered
+
+          return (
+            <Marker
+              key={event.id}
+              coordinate={event.position}
+              onPress={() => handleNavigateToEventDetails(event.id)}
+            >
+              <Image
+                source={markerSource}
+                resizeMode="contain"
+                style={{ width: 48, height: 54 }}
+              />
+            </Marker>
+          );
+        })}
       </MapView>
 
       {/* Fixed blue circle pointer in the center */}
