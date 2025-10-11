@@ -18,7 +18,7 @@ import customMapStyle from "../../map-style.json";
 import * as MapSettings from "../constants/MapSettings";
 import mapMarkerImg from "../images/map-marker.png";
 import mapMarkerGreyImg from "../images/map-marker-grey.png";
-import mapMarkerBlueImg from "../images/map-marker-blue.png"; // <-- new blue marker
+import mapMarkerBlueImg from "../images/map-marker-blue.png";
 import { fetchEvents } from "../services/api";
 import { getFromNetworkFirst } from "../services/caching";
 import { useFocusEffect } from "@react-navigation/native";
